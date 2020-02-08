@@ -1,0 +1,95 @@
+﻿@section logs {
+    <link href="@Url.Content("~/Content/specific/table.css")" rel="stylesheet" type="text/css" />
+}
+
+@using c_gun;
+@using Newtonsoft.Json;
+@{
+    var app = new SendSimpleMessageChunk();
+    var pages = new List<LogClass>();
+
+    ViewBag.Title = "Logs";
+    if (Directory.Exists(app.dateDir))
+    {
+        foreach (var file in Directory.GetFiles(app.dateDir))
+        {
+            var acc = JsonConvert.DeserializeObject<List<LogClass>>(File.ReadAllText(file));
+            pages.Add(new LogClass
+            {
+                Body = acc[0].Body,
+                Title = acc[0].Title,
+                Date = acc[0].Date,
+                From = acc[0].From,
+                Id = acc[0].Id,
+                To = acc[0].To,
+                Status = acc[0].Status
+            });
+        }
+
+    }
+}
+
+<!--Modal that pops up on click of one of the logs-->
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="modalData">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="container">
+                <div class="d-flex row">
+                    <div class="align-self-stretch flex-fill" id="selectId"></div>
+                    <div class="align-self-stretch flex-fill" id="selectDate">bb</div>
+                    <div class="align-self-stretch flex-fill col-1" id="selectStatus">cc</div>
+                </div>
+                <div class="d-flex row">
+                    <div class="align-self-stretch flex-fill" id="selectFrom">dd</div>
+                    <div class="align-self-stretch flex-fill" id="selectTo">ee</div>
+                </div>
+                <div class="container">
+                    <div class="d-flex row" id="selectTitle">Title</div>
+                    <div class="d-flex row">
+                        <div class="align-self-stretch flex-fill" id="selectBody">gg</div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-info" id="resend">Resend</button>
+        </div>
+    </div>
+</div>
+
+
+<h2>@ViewBag.Title.</h2>
+<h3>@ViewBag.Message</h3>
+
+<div class="table-responsive flexgrid">
+    <table class="table">
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">From</th>
+            <th scope="col">To</th>
+            <th scope="col">Body</th>
+            <th scope="col">Date</th>
+            <th scope="col">Status</th>
+        </tr>
+        @{
+            foreach (var log in pages)//logs generation
+            {
+                <tr accesskey="@log.Id">
+                    <td class="truncate">@log.Id</td>
+                    <td class="truncate">@log.From</td>
+                    <td class="truncate">@log.To</td>
+                    <td class="truncate">
+                        @{
+                            string messageDisplay = "";
+                            messageDisplay = log.Title.Length < 1 ? log.Body : log.Title;
+                        }
+                        @messageDisplay
+                    </td>
+                    <td class="truncate">@log.Date</td>
+                    <td class="status">@log.Status</td>
+                </tr>
+            }
+
+        }
+
+    </table>
+</div>
+<script src="~/Scripts/specific/table-info.js"></script>

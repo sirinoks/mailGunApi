@@ -1,0 +1,40 @@
+﻿#showMoreData {
+    display: flex;
+    border: solid blue 1px;
+}
+
+.main {
+    width: 100vh;
+}
+
+body-content {
+    width: 90vh;
+}
+
+.table-responsive {
+    display: table;
+}
+
+.truncate {
+    width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+td {
+    border: solid red 1px;
+}
+
+.table {
+    table-layout: fixed;
+}
+
+.status {
+    width: 3vh;
+}
+
+.modal-content {
+    width: 99vh;
+    padding: 3vh;
+}

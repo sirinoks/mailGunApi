@@ -1,0 +1,27 @@
+﻿.eventChoice {
+    background-color: rgb(200, 200, 200);
+    padding: 0.5vh 0.75vh;
+    border-radius: 1vh;
+    margin-right: 0.5vh;
+}
+
+.selectedEvent {
+    background-color: rgb(30, 210, 120);
+    padding: 0.5vh 0.75vh;
+    border-radius: 1vh;
+    margin-right: 0.5vh;
+}
+
+.displayChoice {
+    background-color: rgb(230, 230, 230);
+    padding: 0.5vh 0.75vh;
+    border-radius: 1vh;
+    margin-right: 0.5vh;
+}
+
+.displaySelected {
+    background-color: rgb(50, 200, 250);
+    padding: 0.5vh 0.75vh;
+    border-radius: 1vh;
+    margin-right: 0.5vh;
+}

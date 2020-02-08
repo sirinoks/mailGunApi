@@ -1,0 +1,45 @@
+﻿@section send {
+    <link href="@Url.Content("~/Content/specific/send.css")" rel="stylesheet" type="text/css" />
+}
+
+@using c_gun
+@{
+    var app = new SendSimpleMessageChunk();
+
+    string result = "";
+
+    if (IsPost)
+    {
+        app.msgTo = $"{ Request["mailTo"]}";
+        app.title = $"{Request["mailTitle"]}";
+        app.body = $"{ Request["mailBody"]}";
+        string tags = $"{ Request["mailTags"]}";
+        app.Process(tags);
+        result = "Your message was sent";
+    }
+}
+
+<div>
+    <form action="" method="post">
+        <p>
+            <label for="mailTo">To:</label><br>
+            <input type="text" name="mailTo" id="mailTo" />
+        </p>
+        <p>
+            <label for="mailTitle">Message:</label><br><!--Don't touch the names, they work for some reason-->
+            <input type="text" name="mailTitle" id="mailTitle" /><br>
+
+            <textarea name="mailBody" id="textBody"></textarea>
+        </p>
+        <p>
+            <label for="tags">Tags:</label><br>
+            <input type="text" name="mailTags" id="tags" /><br>
+
+        </p>
+        <p><input type="submit" value=" Send! " class="btn btn-primary" /></p>
+    </form>
+    <div class="alert alert-success" role="alert">@result</div>
+</div>
+
+<script src="~/Scripts/specific/tag-list.js"></script>
+<script src="~/Scripts/specific/send.js"></script>

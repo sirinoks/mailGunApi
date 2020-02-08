@@ -1,0 +1,224 @@
+﻿@section index {
+    <link href="@Url.Content("~/Content/specific/index.css")" rel="stylesheet" type="text/css" />
+    <link href="@Url.Content("~/Content/daterangepicker.min.css")" rel="stylesheet" type="text/css" />
+}
+
+@{
+    ViewBag.Title = "Home Page";
+}
+
+@using System.Dynamic
+@using System.Globalization
+@using c_gun
+@using Newtonsoft.Json.Linq
+@using Newtonsoft.Json.Serialization
+@{
+    var app = new SendSimpleMessageChunk();
+
+    //each parameter for the request needs a var
+    string ascending = "yes";
+    string recipient = null;
+    int limit = 100;
+    string start = "Fri, 3 May 2013 09:00:00 -0000";
+    string size = null;
+    string _event = "accepted OR delivered";
+    string attachment = null;
+    string from_ = null; //from is not used. Once you have multiple hosts it will make sense to use it. To add it just make an input in html form and connect it with this string.
+    string message_id = null;
+    string subject = null;
+    string tags = null;
+    dynamic items = null;
+    dynamic paging = null;
+    string response = "";
+    string end = null;
+
+    string testTime = "";
+
+    string evAccept = null;
+    string evReject = null;
+    string evDelivered = null;
+    string evFailed = null;
+    string evOpened = null;
+    string evClicked = null;
+    string evUnsubbed = null;
+    string evComplained = null;
+    string evStored = null;
+
+
+    if (IsPost) //then we connect those vars to html form elements
+    {
+        recipient = $"{Request["emailTo"]}";
+
+        tags = $"{ Request["tags"]}";
+
+        limit = int.Parse($"{ Request["display"]}");
+
+        testTime = $"{Request["timeRange"]}";
+
+        string[] timeSplit = testTime.Split(' ');
+        if (!String.IsNullOrEmpty(testTime))
+        {
+            string timeStart = timeSplit[0];
+            string timeEnd = timeSplit[2];
+
+            DateTime newStartFormat = DateTime.ParseExact(timeStart, "yyyy-MM-dd", CultureInfo.CurrentCulture);
+            start = newStartFormat.ToString("R");
+
+            DateTime newEndFormat = DateTime.ParseExact(timeEnd, "yyyy-MM-dd", CultureInfo.CurrentCulture);
+            end = newEndFormat.ToString("R");
+        }
+        evAccept = $"{Request["eventAccepted"]}";
+        evReject = $"{Request["eventRejected"]}";
+        evDelivered = $"{Request["eventDelivered"]}";
+        evFailed = $"{Request["eventFailed"]}";
+        evOpened = $"{Request["eventOpened"]}";
+        evClicked = $"{Request["eventClicked"]}";
+        evUnsubbed = $"{Request["eventUnsub"]}";
+        evComplained = $"{Request["eventComplained"]}";
+        evStored = $"{Request["eventStored"]}";
+
+        var evts = new[] { evAccept , evReject , evDelivered, evFailed, evOpened, evClicked, evUnsubbed, evComplained, evStored }.Where(x=>!String.IsNullOrEmpty(x));
+        _event = String.Join(" OR ", evts);
+
+        message_id = $"{ Request["id"]}";
+
+
+        response = app.EventsDateTimeRecipient(ascending, recipient, limit, start, size, _event, attachment, from_, message_id, subject, tags, end).Content;
+
+        //some vars can't be named certain names like "event", so we replace them.
+        response = response.Replace("message-id", "message_id");
+        response = response.Replace("event", "event_");
+        dynamic res = JObject.Parse(response);
+        paging = res.paging;
+        items = res.items;
+    }
+}
+
+<!-- A modal that pops up with information about a clicked log-->
+
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="modalData">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="container">
+                <div class="d-flex row">
+                    <div class="align-self-stretch flex-fill" id="selectId"></div>
+                    <div class="align-self-stretch flex-fill" id="selectDate">bb</div>
+                    <div class="align-self-stretch flex-fill col-1" id="selectStatus">cc</div>
+                </div>
+                <div class="d-flex row">
+                    <div class="align-self-stretch flex-fill" id="selectFrom">dd</div>
+                    <div class="align-self-stretch flex-fill" id="selectTo">ee</div>
+                </div>
+                <div class="container">
+                    <div class="d-flex row" id="selectTitle">Title</div>
+                    <div class="d-flex row">
+                        <div class="align-self-stretch flex-fill" id="selectBody">gg</div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-info" id="resend">Resend</button>
+        </div>
+    </div>
+</div>
+
+
+
+@if (items != null) //prevents an error when there are no search results
+{//generates items from searched data
+    <div id="dataMore" class="d-flex flex-row">
+        <div class="container">
+            @foreach (var item in items)
+            {
+                <div class="container d-flex row item" accesskey="@item.message.headers.message_id">
+                    <div class="dataReg align-self-stretch flex-fill">@item.message.headers.message_id</div>
+                    <div class="dataReg align-self-stretch flex-fill">@item.timestamp</div>
+                    <div class="dataReg align-self-stretch flex-fill">@item.event_</div>
+                    <div class="d-flex row">
+                        <div class="dataReg align-self-stretch flex-fill" id="">@item.message.headers.from</div>
+                        <div class="dataReg align-self-stretch flex-fill">@item.message.headers.to</div>
+                    </div>
+                    <div class="d-flex row">
+                        <div class="dataReg align-self-stretch flex-fill">@item.message.headers.subject</div>
+                    </div>
+                    <div class="d-flex row">
+                        @foreach (var tag in item.tags)
+                        {
+                            <div class="dataReg align-self-stretch flex-fill">@tag</div>
+                        }
+                    </div>
+                </div>
+                <br>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div id="dataMore" class="d-flex flex-row">Nothing here</div>
+}
+
+<br>
+<form method="post">
+    <div>
+        Display per page:
+        <span class="displayChoice"><input type="radio" name="display" id="display2" value="2"><label for="display2">2</label></span>
+        <span class="displayChoice displaySelected"><input type="radio" name="display" id="display5" value="5" checked><label for="display5">5</label></span>
+        <span class="displayChoice"><input type="radio" name="display" id="display20" value="20"><label for="display20">20</label></span>
+        <span class="displayChoice"><input type="radio" name="display" id="display100" value="100"><label for="display100">100</label></span>
+    </div>
+
+
+    <div>Keyword search</div>
+    <div class="form-group">
+        <input type="search" name="keywords" />
+        <input type="submit" value="Search" />
+    </div>
+
+    Advanced search
+    <div class="form-group">
+        <label>To</label>
+        <input type="text" class="form-control" aria-describedby="emailHelp" placeholder="Enter email" name="emailTo">
+        <small class="form-text text-muted">For test purposes use shinigamoo@gmail.com</small>
+    </div>
+
+    <div class="form-group">
+        Time
+        <input id="timeRange" name="timeRange" value="" />
+    </div>
+
+    <div class="form-group">
+        <label>Tags</label>
+        <input type="text" class="form-control" aria-describedby="emailHelp" id="tags" placeholder="Enter tags" name="tags">
+        <small class="form-text text-muted">Separate them with a ,</small>
+    </div>
+
+    <div class="form-group">
+        Events
+        <br>
+        <span class="eventChoice"><input type="checkbox" aria-label="Checkbox for following text input" name="eventAccepted" id="accept" value="accepted"><label for="accept">accepted</label></span>
+        <span class="eventChoice"><input type="checkbox" aria-label="Checkbox for following text input" name="eventRejected" id="reject" value="rejected"><label for="reject">rejected</label></span>
+        <span class="eventChoice"><input type="checkbox" aria-label="Checkbox for following text input" name="eventDelivered" id="deliver" value="delivered"><label for="deliver">delivered</label></span>
+        <span class="eventChoice"><input type="checkbox" aria-label="Checkbox for following text input" name="eventFailed" id="fail" value="failed"><label for="fail">failed</label></span>
+        <span class="eventChoice"><input type="checkbox" aria-label="Checkbox for following text input" name="eventOpened" id="open" value="opened"><label for="open">opened</label></span>
+        <span class="eventChoice"><input type="checkbox" aria-label="Checkbox for following text input" name="eventClicked" id="click" value="clicked"><label for="click">clicked</label></span>
+        <span class="eventChoice"><input type="checkbox" aria-label="Checkbox for following text input" name="eventUnsub" id="unsub" value="unsubscribed"><label for="unsub">unsubscribed</label></span>
+        <span class="eventChoice"><input type="checkbox" aria-label="Checkbox for following text input" name="eventComplained" id="complain" value="complained"><label for="complain">complained</label></span>
+        <span class="eventChoice"><input type="checkbox" aria-label="Checkbox for following text input" name="eventStored" id="store" value="stored"><label for="store">stored</label></span>
+
+    </div>
+
+    <div class="form-group">
+        <label for="id">Id</label>
+        <input type="text" class="form-control" placeholder="Search by Id" id="id" name="id">
+        <small class="form-text text-muted">Use a full Id without <></small>
+    </div>
+
+
+    <input type="submit" />
+</form>
+
+
+
+<script src="~/Scripts/specific/tag-list.js"></script>
+<script src="~/Scripts/specific/events-info.js"></script>
+<script src="~/Scripts/specific/index.js"></script>
